@@ -1,2 +1,2 @@
 # asean-financial-indicators-dashboard
-TGP Challenge (ASEAN Financial Indicator Dashboard)
+Company Challenge (ASEAN Financial Indicator Dashboard)
