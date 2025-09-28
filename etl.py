@@ -2,6 +2,7 @@ import world_bank_data as wb
 import pandas as pd
 import functools as ft
 import sqlite3
+import os
 
 
 # Ten World Bank Indicators as metrics for the dashboard 
@@ -11,18 +12,24 @@ Urban Population, Rural Population, Population Density, GDP, Financial Account O
 '''
 indicators = ["SL.UEM.TOTL.ZS", "FP.CPI.TOTL.ZG", "BX.TRF.PWKR.CD.DT", "IT.CEL.SETS.P2", "IT.NET.USER.ZS", "SP.URB.TOTL.IN.ZS", "SP.RUR.TOTL.ZS", "EN.POP.DNST", "NY.GDP.PCAP.CD", "FX.OWN.TOTL.ZS"]
 name = ["unemployment", "inflation", "personal_remit", "mobile", "internet", "urb_pop", "rur_pop", "pop_density", "gdp", "acc_ownership"]
+current_directory = os.getcwd()
+data_folder= current_directory + "/data"
 
 # Get the indicator data from World Bank module (takes it directly from the API)
 def get_indicator_data(tickers):
     data_lst = []
     ticker_count = 0
+    os.makedirs(data_folder, exist_ok = True)
+    
+    path = data_folder + "/"
+
 
     for t in tickers:
         try:
             # Get the data for the years 2012 to 2024
             df = wb.get_series(t, date = '2012:2024').reset_index()
-            df.to_csv(name[ticker_count] + ".csv", index = False)
-            data_lst.append(name[ticker_count] + ".csv")
+            df.to_csv(path + name[ticker_count] + ".csv", index = False)
+            data_lst.append(path + name[ticker_count] + ".csv")
             ticker_count += 1
         except Exception as err:
             print("Failed to get data for: ", t)
