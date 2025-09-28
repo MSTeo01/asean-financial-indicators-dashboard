@@ -19,16 +19,19 @@ data_folder= current_directory + "/data"
 def get_indicator_data(tickers):
     data_lst = []
     ticker_count = 0
-    os.makedirs(data_folder, exist_ok = True)
     
+    # Create data folder
+    os.makedirs(data_folder, exist_ok = True)
     path = data_folder + "/"
-
 
     for t in tickers:
         try:
             # Get the data for the years 2012 to 2024
             df = wb.get_series(t, date = '2012:2024').reset_index()
+
+            # Put the data file into the data folder
             df.to_csv(path + name[ticker_count] + ".csv", index = False)
+
             data_lst.append(path + name[ticker_count] + ".csv")
             ticker_count += 1
         except Exception as err:
@@ -70,7 +73,6 @@ def merge_dfs(csv_files):
     df_final = df_final[[c for c in df_final.columns if not c.endswith('_drop')]]
     df_final['id'] = df_final.index
     
-
     cols_to_move = ['id', 'Country', 'country_code', 'Year']
     df_final = df_final[ cols_to_move + [ col for col in df_final.columns if col not in cols_to_move ] ]
     return df_final
@@ -122,7 +124,6 @@ def run_etl_pipeline():
     load_data(df)
 
     return df
-
 
 
 if __name__ == '__main__':
