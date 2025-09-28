@@ -1,6 +1,7 @@
 import world_bank_data as wb
 import pandas as pd
 import functools as ft
+import sqlite3
 
 
 # Ten World Bank Indicators as metrics for the dashboard 
@@ -67,17 +68,56 @@ def merge_dfs(csv_files):
     df_final = df_final[ cols_to_move + [ col for col in df_final.columns if col not in cols_to_move ] ]
     return df_final
 
-def load_data(df, db):
-    ...
+# Save transformed data to SQLite database
+def load_data(df, db_name = 'asean_world_bank_indicators.db', table_name = 'asean_2012_2024'):
+
+    # Connect to SQLite database (creates if doesn't exist)
+    conn = sqlite3.connect(db_name)
+
+    try:
+        df.to_sql(table_name, conn, if_exists = 'replace', index = False)
+
+        # Verify the load was successful
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        record_count = cursor.fetchone()[0]
+        
+        print(f"Successfully loaded {record_count} records to '{table_name}' table")
+
+        # Show a sample of what was loaded
+        print("\nSample of loaded data:")
+        sample_df = pd.read_sql_query(f"SELECT * FROM {table_name} LIMIT 5", conn)
+        print(sample_df.to_string(index=False))
+        
+        return f"Data successfully loaded to {db_name}"
+
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return None
+    
+    finally:
+        conn.close()
+
+
+def run_etl_pipeline():
+    
+    # Extract
+    data = get_indicator_data(indicators)
+
+    # Transform
+    data_lst = []
+    for index, file_name in enumerate(data):
+        data_lst.append(transform_data(file_name, index))
+    
+    df = merge_dfs(data_lst)
+
+    # Load
+    load_data(df)
+
+    return df
+
 
 
 if __name__ == '__main__':
-    # data = get_indicator_data(indicators)
-
-    # data_lst = []
-    # for index, file_name in enumerate(data):
-    #     data_lst.append(transform_data(file_name, index))
-    
-    # df = merge_dfs(data_lst)
-    # print(df.info())
+    run_etl_pipeline()
     

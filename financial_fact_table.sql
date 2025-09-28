@@ -13,5 +13,5 @@ CREATE TABLE asean_2012_2024 (
     rur_pop_value DOUBLE PRECISION,
     pop_density_value DOUBLE PRECISION,
     gdp_value DOUBLE PRECISION,
-    acc_ownership_value DOUBLE PRECISION,
+    acc_ownership_value DOUBLE PRECISION
 )
