@@ -13,7 +13,7 @@ Urban Population, Rural Population, Population Density, GDP, Financial Account O
 indicators = ["SL.UEM.TOTL.ZS", "FP.CPI.TOTL.ZG", "BX.TRF.PWKR.CD.DT", "IT.CEL.SETS.P2", "IT.NET.USER.ZS", "SP.URB.TOTL.IN.ZS", "SP.RUR.TOTL.ZS", "EN.POP.DNST", "NY.GDP.PCAP.CD", "FX.OWN.TOTL.ZS"]
 name = ["unemployment", "inflation", "personal_remit", "mobile", "internet", "urb_pop", "rur_pop", "pop_density", "gdp", "acc_ownership"]
 current_directory = os.getcwd()
-data_folder= current_directory + "/data"
+data_folder = current_directory + "/data"
 
 # Get the indicator data from World Bank module (takes it directly from the API)
 def get_indicator_data(tickers):
@@ -74,7 +74,7 @@ def merge_dfs(csv_files):
     df_final['id'] = df_final.index
     
     cols_to_move = ['id', 'Country', 'country_code', 'Year']
-    df_final = df_final[ cols_to_move + [ col for col in df_final.columns if col not in cols_to_move ] ]
+    df_final = df_final[cols_to_move + [col for col in df_final.columns if col not in cols_to_move]]
     return df_final
 
 # Save transformed data to SQLite database
