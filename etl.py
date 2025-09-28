@@ -1,58 +1,83 @@
 import world_bank_data as wb
 import pandas as pd
+import functools as ft
 
 
 # Ten World Bank Indicators as metrics for the dashboard 
 '''
 Unemployment, Inflation, Personal Remittance, Mobile Subscriptions, Internet Usage,
-Urban Population, Rural Population, Population Density, GDP, Financial account ownership
+Urban Population, Rural Population, Population Density, GDP, Financial Account Ownership
 '''
-indicators = ['SL.UEM.TOTL.ZS', 'FP.CPI.TOTL.ZG', 'BX.TRF.PWKR.CD.DT', 'IT.CEL.SETS.P2', 'IT.NET.USER.ZS', 'SP.URB.TOTL.IN.ZS', 'SP.RUR.TOTL.ZS', 'EN.POP.DNST', 'NY.GDP.PCAP.CD', 'FX.OWN.TOTL.ZS']
+indicators = ["SL.UEM.TOTL.ZS", "FP.CPI.TOTL.ZG", "BX.TRF.PWKR.CD.DT", "IT.CEL.SETS.P2", "IT.NET.USER.ZS", "SP.URB.TOTL.IN.ZS", "SP.RUR.TOTL.ZS", "EN.POP.DNST", "NY.GDP.PCAP.CD", "FX.OWN.TOTL.ZS"]
+name = ["unemployment", "inflation", "personal_remit", "mobile", "internet", "urb_pop", "rur_pop", "pop_density", "gdp", "acc_ownership"]
 
 # Get the indicator data from World Bank module (takes it directly from the API)
 def get_indicator_data(tickers):
     data_lst = []
+    ticker_count = 0
+
     for t in tickers:
         try:
             # Get the data for the years 2012 to 2024
             df = wb.get_series(t, date = '2012:2024').reset_index()
-            data_lst.append(df)
+            df.to_csv(name[ticker_count] + ".csv", index = False)
+            data_lst.append(name[ticker_count] + ".csv")
+            ticker_count += 1
         except Exception as err:
             print("Failed to get data for: ", t)
             print("Error: ", err)
     
     return data_lst
 
-def transform_data():
+# Clean the data for each indicator file
+def transform_data(file, index):
+    df = pd.read_csv(file)
+
+    # Filter for ASEAN countries
+    asean = ['Brunei', 'Cambodia', 'Indonesia',
+		     'Laos', 'Malaysia', 'Myanmar',
+		     'Philippines', 'Singapore', 'Thailand',
+		     'Vietnam']
+    
+    asean_countries_df = df[df['Country'].isin(asean)].reset_index(drop = True)
+
+    # Mapping each country to three-letter codes
+    country_code = {'Brunei':'BRN', 'Cambodia':'KHM', 'Indonesia':'IDN',
+                    'Laos':'LAO', 'Malaysia':'MYS', 'Myanmar':'MMR',
+                    'Phillippines':'PHL', 'Singapore':'SGP', 'Thailand':'THA',
+                    'Vietnam':'VNM'}
+    
+    asean_countries_df['country_code'] = asean_countries_df['Country'].map(country_code)
+
+    # Dropping Series column (name of the indicator) and renaming the indicator code with its name
+    asean_countries_df = asean_countries_df.rename(columns = {indicators[index] : name[index] + "_value"})
+    asean_countries_df = asean_countries_df.drop(columns = ["Series"])
+    asean_countries_df = asean_countries_df.fillna(0)
+    
+    return asean_countries_df
+
+# Merging all of the dataframes to consolidate all of the data in one big fact table
+def merge_dfs(csv_files):
+    df_final = ft.reduce(lambda left, right: pd.merge(left, right, on = ['Country', 'Year'], suffixes = ('', '_drop')), csv_files)
+    df_final = df_final[[c for c in df_final.columns if not c.endswith('_drop')]]
+    df_final['id'] = df_final.index
+    
+
+    cols_to_move = ['id', 'Country', 'country_code', 'Year']
+    df_final = df_final[ cols_to_move + [ col for col in df_final.columns if col not in cols_to_move ] ]
+    return df_final
+
+def load_data(df, db):
     ...
 
-def load_data():
-    ...
-
-# # Process...
-# def process_indicator_csv(file):
-#     df = pd.read_csv(file, skiprows = 4)
-#     df = df.drop(['Indicator Name', 'Country Name', 'Indicator Code', 'Unnamed: 69'], axis = 1)
-#     melted_df = df.melt(id_vars = ['Country Code'])
-#     melted_df = melted_df.reset_index()
-#     melted_df.rename(columns = {'index' : 'id', 'variable' : 'year'}, inplace = True)
-#     melted_df.to_csv(file[:-4] + '_unpivot.csv', index = False)
-#     return melted_df
-
-# def get_country_name_code(file):
-#     country_df = pd.read_csv(file, skiprows = 4)
-#     country_df = country_df[['Country Code', 'Country Name']]
-#     return 
-
-# file_names = ['unemployment.csv', 'urb_pop.csv', 'rur_pop.csv', 'pop_density.csv', 'personal_remit.csv', 'mobile.csv', 
-#               'internet.csv', 'inflation.csv', 'gdp.csv', 'acc_ownership.csv']
-
-# df_lst = []
-# for wbi in file_names:
-#     world_bank = process_indicator_csv(wbi)
-#     df_lst.append(world_bank)
-# df_lst
 
 if __name__ == '__main__':
-    data = get_indicator_data(indicators)
-    print(data[0])
+    # data = get_indicator_data(indicators)
+
+    # data_lst = []
+    # for index, file_name in enumerate(data):
+    #     data_lst.append(transform_data(file_name, index))
+    
+    # df = merge_dfs(data_lst)
+    # print(df.info())
+    

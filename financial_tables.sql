@@ -1,4 +1,5 @@
--- Creating tables (Normalized schemas)
+-- Creating tables (Normalized schemas) 
+-- Not used due to its disadvantages in analytics and reporting situations (too many joins if want to compare multiple indicators)
 CREATE TABLE countries (
 	code VARCHAR(3) PRIMARY KEY,
 	name VARCHAR(255)
